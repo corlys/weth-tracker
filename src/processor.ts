@@ -92,6 +92,9 @@ async function saveInteraction(
   ctx: BlockHandlerContext<Store>,
   InteractionData: Interaction[]
 ) {
+
+  ctx.log.info("enter saveInteraction")
+
   const wethEntity = await getOrCreateWeth(ctx.store);
 
   let currentDeposit = wethEntity.deposit;
@@ -101,6 +104,7 @@ async function saveInteraction(
   let cacheWithdrawal: BigNumber = BigNumber.from("0");
 
   for (const interaction of InteractionData) {
+    ctx.log.info("loop interaction")
     if (interaction.type === "deposit") {
       cacheDeposit = cacheDeposit.add(interaction.amount);
     }
@@ -113,15 +117,21 @@ async function saveInteraction(
   cacheDeposit = cacheDeposit.add(BigNumber.from(currentDeposit));
   cacheWithdrawal = cacheWithdrawal.add(BigNumber.from(currentWithdrawal));
 
+  ctx.log.info("before calling tokenSupply")
+
   let supply = await new Contract(
     ctx,
     ctx.block,
     "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".toLowerCase()
   ).totalSupply();
+  
+  ctx.log.info("after calling tokenSupply")
 
   wethEntity.deposit = cacheDeposit.toString();
   wethEntity.withdraw = cacheWithdrawal.toString();
   wethEntity.totalSuppy = supply.toString();
+
+  ctx.log.info("saving interaction")
 
   await ctx.store.save(wethEntity);
 }
@@ -132,7 +142,7 @@ processor.run(new TypeormDatabase(), async (ctx) => {
     for (let i of c.items) {
       // apply arbitrary data transformation logic here
       // use ctx.store to persist the data
-      ctx.log.info(i, "Next item:");
+      ctx.log.info("Enter new Item");
 
       if (i.kind === "evmLog" && i.evmLog.topics[0] === events.Deposit.topic) {
         const depositData = handleDeposit({
