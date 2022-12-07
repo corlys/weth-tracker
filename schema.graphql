@@ -1,5 +1,13 @@
-type MyEntity @entity {
+type Weth @entity {
   id: ID!
-  foo: String!
+  deposit: String
+  withdraw: String
+  totalSuppy: String
 }
 
+# type Transaction @entity {
+#   id: ID!
+#   actor: String
+#   type: String
+#   value: BigInt
+# }
